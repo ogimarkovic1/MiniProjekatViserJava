@@ -4,107 +4,164 @@ import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+
+
 
 public class Klijent extends Application implements EventHandler<ActionEvent> {
-    public static final int TCP_PORT = 1234;
-
-    TextField indexi[][]=new TextField[3][4];
-    Label ispis;
+    VBox sablon;
+    Button dugmad[][]=new Button[4][4];
+    int min=0;
+    int max=15;
+     int min1=0;
+     int max1=15;
+    Label ispis=new Label();
+    Button start=new Button("START");
+     int count=0;
+     boolean flag=false;
+      boolean flagovi[]=new boolean[16];
     public static void main(String[] args) {
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) {
-                primaryStage.setTitle("Klijent");
-                VBox sablon=new VBox();
-                Label naslov=new Label("Indeksi u matrici 3x4");
-                sablon.getChildren().add(naslov);
-                dodajGrid(sablon);
-                dodajOstatak(sablon);
-                Scene scene=new Scene(sablon);
-                scene.getStylesheets().add("./stil.css");
-                primaryStage.setScene(scene);
-                primaryStage.show();
-    }
-    private void dodajGrid(VBox sablon){GridPane gp=new GridPane();
+        primaryStage.setTitle("MinMax");
+        sablon=new VBox();
 
+        start.setId("start");
+        start.setOnAction(this);
+        sablon.getChildren().add(start);
+    dodajDugmadIlabelu(sablon);
+        Scene scene=new Scene(sablon);
+        scene.getStylesheets().add("./stil.css");
+        primaryStage.setScene(scene);
 
-       for(int i=0;i<3;i++)
-           for(int j=0;j<4;j++)
-           {indexi[i][j] = new TextField();
-                if(j==0)
-                    indexi[i][j].setPromptText("Index x");
-                else if(j==1)
-                    indexi[i][j].setPromptText("Index y");
-                else if(j==2)
-                    indexi[i][j].setPromptText("Index z");
-                else
-                    indexi[i][j].setPromptText("Rezultat");
-
-           }
-
-
-       for(int i=0;i<3;i++)
-           for(int j=0;j<4;j++)
-               gp.add(indexi[i][j],j,i);
-
-        sablon.getChildren().add(gp);
-    }
-    private void dodajOstatak(VBox sablon){
-        Button dugme=new Button("Prosledi podatke");
-        dugme.setOnAction(this);
-        Label label1=new Label("Odgovor servera-resenje jednacine:");
-        ispis=new Label();
-        sablon.getChildren().addAll(dugme,label1,ispis);
-
+        primaryStage.show();
 
     }
+
 
     @Override
     public void handle(ActionEvent actionEvent) {
-        boolean flag=false;
-        for(int i=0;i<3;i++)
-            for(int j=0;j<4;j++)
-                if(indexi[i][j].getText().length()==0)
-                        flag=true;
-    if(!flag){
-       try {
-            InetAddress address=InetAddress.getByName("127.0.0.1");
-            Socket socket=new Socket(address,TCP_PORT);
-           BufferedReader in = new BufferedReader(new
-                   InputStreamReader(socket.getInputStream()));
 
-           DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-            for(int i=0;i<3;i++)
-                for(int j=0;j<4;j++)
-                    output.writeDouble(Double.parseDouble(indexi[i][j].getText()));
+        if(actionEvent.getSource()==start){
+           // ispis.setText("Igra je krenula");
+            for (int i=0;i<16;i++)
+                flagovi[i]=false;
+            flag=true;
+        }
+        if(flag) {
+            if (actionEvent.getSource() == start) {
+                for (int i = 0; i < 16; i++)
+                    flagovi[i] = false;
+                min1 = 0;
+                max1 = 15;
+                count = 0;
+                ispis.setText("Igra je krenula");
+                int niz[] = new int[16];
+                for (int i = 0; i <= 15; i++)
+                    niz[i] = 0;
 
-           output.flush();
-          String resenje=in.readLine();
+                for (int i = 0; i < 4; i++)
+                    for (int j = 0; j < 4; j++) {
+                        while (true) {
+                            int randomNum = (int) (Math.random() * (max - min + 1)) + min;
+                            if (niz[randomNum] == 0) {
+                                dugmad[i][j].setText(Integer.toString(randomNum));
+                                dugmad[i][j].setOnAction(this);
+                                niz[randomNum] = 1;
+                                break;
+                            }
+                        }
+                    }
+            }
+            if (actionEvent.toString().contains(Integer.toString(max1))) {
+                flagovi[max1] = true;}
 
-        ispis.setText(resenje);
-in.close();
-output.close();
-socket.close();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+
+             else   if (actionEvent.toString().contains(Integer.toString(min1)) && flagovi[max1]==true) {
+                    flagovi[min1] = true;
+
+
+                    if (flagovi[min1] == true && flagovi[max1] == true) {
+                        for (int i = 0; i < 4; i++)
+                            for (int j = 0; j < 4; j++) {
+                                if (dugmad[i][j].getText().equals(Integer.toString(min1)) || dugmad[i][j].getText().equals(Integer.toString(max1)))
+                                    dugmad[i][j].setText(".");
+                            }
+                        count++;
+                        ++min1;
+                        --max1;
+                    }
+
+
+                }
+
+            else
+                flagovi[max1]=false;
+
+
+
+            }
+        if (count == 8) {
+            ispis.setText("Presli ste igricu.Stisnite start da pokrenete opet");
+            flag = false;
         }
 
-    }
-    else
-        ispis.setText("Niste uneli sve neophodne podatke");
-    }
+        }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private void dodajDugmadIlabelu(VBox sablon){
+        int niz[]=new int[16];
+        for(int i=0;i<=15;i++)
+            niz[i]=0;
+
+        for(int i=0;i<4;i++)
+            for(int j=0;j<4;j++)
+            {   while (true){
+                int randomNum = (int)(Math.random() * (max - min + 1)) + min;
+                if(niz[randomNum]==0)
+                {
+                    dugmad[i][j]=new Button(Integer.toString(randomNum));
+                    dugmad[i][j].setOnAction(this);
+                    niz[randomNum]=1;
+                    break;
+                }}
+            }
+
+
+        GridPane gp=new GridPane();
+
+
+        for(int i=0;i<4;i++)
+            for(int j=0;j<4;j++)
+                gp.add(dugmad[i][j],j,i);
+
+            sablon.getChildren().add(gp);
+ispis.setText("Stisnite start za pokretanje");
+sablon.getChildren().add(ispis);
+    }
 }
